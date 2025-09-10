@@ -6,8 +6,8 @@ import type { auth } from '@/auth';
 
 type Session = typeof auth.$Infer.Session;
 
-const UNPROTECTED_ROUTES = ['/login', '/register'];
-const PROTECTED_ROUTES = ['/d'];
+const UNPROTECTED_ROUTES = ['/login', '/register', '/demo'];
+const PROTECTED_ROUTES = ['/d', '/projects'];
 
 export default async function authMiddleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -36,5 +36,5 @@ export default async function authMiddleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|public).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|public|demo).*)'],
 };
