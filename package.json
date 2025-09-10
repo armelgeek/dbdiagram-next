@@ -16,6 +16,8 @@
     "@auth/drizzle-adapter": "^1.7.4",
     "@aws-sdk/client-s3": "^3.738.0",
     "@aws-sdk/s3-request-presigner": "^3.738.0",
+    "@dbml/core": "^3.13.9",
+    "@dbml/parse": "^3.13.9",
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^3.10.0",
     "@monaco-editor/react": "^4.7.0",

@@ -2,14 +2,17 @@
 
 import { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
+import { DbmlRenderer, getDefaultDbmlContent } from '@/shared/lib/utils/dbml';
 
 interface DiagramViewerProps {
   content: string;
+  syntax?: string;
   className?: string;
 }
 
 export const DiagramViewer: React.FC<DiagramViewerProps> = ({
   content,
+  syntax = 'mermaid',
   className = '',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -27,103 +30,105 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
       setError(null);
 
       try {
-        // Initialize Mermaid
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: 'default',
-          securityLevel: 'loose',
-          flowchart: {
-            useMaxWidth: false,
-            htmlLabels: true,
-          },
-          er: {
-            useMaxWidth: false,
-            entityPadding: 15,
-            fill: '#f9f9f9',
-            fontSize: 12,
-          },
-        });
-
         // Clear the container
         if (containerRef.current) {
           containerRef.current.innerHTML = '';
         }
 
-        // Generate unique ID for this diagram
-        const id = `mermaid-diagram-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        let svg: string;
 
-        // Create a div for the diagram
-        const diagramDiv = document.createElement('div');
-        diagramDiv.id = id;
-        diagramDiv.style.textAlign = 'center';
-        
-        if (containerRef.current) {
-          containerRef.current.appendChild(diagramDiv);
+        if (syntax === 'dbml') {
+          // Render DBML diagram
+          svg = await DbmlRenderer.renderToSvg(content);
+        } else {
+          // Render Mermaid diagram (default)
+          // Initialize Mermaid
+          mermaid.initialize({
+            startOnLoad: false,
+            theme: 'default',
+            securityLevel: 'loose',
+            flowchart: {
+              useMaxWidth: false,
+              htmlLabels: true,
+            },
+            er: {
+              useMaxWidth: false,
+              entityPadding: 15,
+              fill: '#f9f9f9',
+              fontSize: 12,
+            },
+          });
+
+          // Generate unique ID for this diagram
+          const id = `mermaid-diagram-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+          // Parse and render the diagram
+          const result = await mermaid.render(id, content);
+          svg = result.svg;
         }
 
-        // Parse and render the diagram
-        const { svg } = await mermaid.render(id, content);
-        
         if (containerRef.current) {
-          const diagramElement = containerRef.current.querySelector(`#${id}`);
-          if (diagramElement) {
-            diagramElement.innerHTML = svg;
+          // Create a div for the diagram
+          const diagramDiv = document.createElement('div');
+          diagramDiv.style.textAlign = 'center';
+          diagramDiv.innerHTML = svg;
+          
+          containerRef.current.appendChild(diagramDiv);
+          
+          // Make the diagram interactive
+          const svgElement = diagramDiv.querySelector('svg');
+          if (svgElement) {
+            svgElement.style.maxWidth = '100%';
+            svgElement.style.height = 'auto';
+            svgElement.style.cursor = 'grab';
             
-            // Make the diagram interactive
-            const svgElement = diagramElement.querySelector('svg');
-            if (svgElement) {
-              svgElement.style.maxWidth = '100%';
-              svgElement.style.height = 'auto';
+            // Add zoom and pan functionality
+            let isPanning = false;
+            let startX = 0;
+            let startY = 0;
+            let scale = 1;
+            
+            svgElement.addEventListener('wheel', (e) => {
+              e.preventDefault();
+              const delta = e.deltaY > 0 ? 0.9 : 1.1;
+              scale *= delta;
+              scale = Math.max(0.1, Math.min(5, scale));
+              svgElement.style.transform = `scale(${scale})`;
+            });
+            
+            svgElement.addEventListener('mousedown', (e) => {
+              isPanning = true;
+              startX = e.clientX;
+              startY = e.clientY;
+              svgElement.style.cursor = 'grabbing';
+            });
+            
+            svgElement.addEventListener('mousemove', (e) => {
+              if (!isPanning) return;
+              
+              const dx = e.clientX - startX;
+              const dy = e.clientY - startY;
+              
+              const rect = svgElement.getBoundingClientRect();
+              const centerX = rect.width / 2;
+              const centerY = rect.height / 2;
+              
+              svgElement.style.transformOrigin = `${centerX + dx}px ${centerY + dy}px`;
+            });
+            
+            svgElement.addEventListener('mouseup', () => {
+              isPanning = false;
               svgElement.style.cursor = 'grab';
-              
-              // Add zoom and pan functionality
-              let isPanning = false;
-              let startX = 0;
-              let startY = 0;
-              let scale = 1;
-              
-              svgElement.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const delta = e.deltaY > 0 ? 0.9 : 1.1;
-                scale *= delta;
-                scale = Math.max(0.1, Math.min(5, scale));
-                svgElement.style.transform = `scale(${scale})`;
-              });
-              
-              svgElement.addEventListener('mousedown', (e) => {
-                isPanning = true;
-                startX = e.clientX;
-                startY = e.clientY;
-                svgElement.style.cursor = 'grabbing';
-              });
-              
-              svgElement.addEventListener('mousemove', (e) => {
-                if (!isPanning) return;
-                
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
-                
-                const rect = svgElement.getBoundingClientRect();
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                
-                svgElement.style.transformOrigin = `${centerX + dx}px ${centerY + dy}px`;
-              });
-              
-              svgElement.addEventListener('mouseup', () => {
-                isPanning = false;
-                svgElement.style.cursor = 'grab';
-              });
-              
-              svgElement.addEventListener('mouseleave', () => {
-                isPanning = false;
-                svgElement.style.cursor = 'grab';
-              });
-            }
+            });
+            
+            svgElement.addEventListener('mouseleave', () => {
+              isPanning = false;
+              svgElement.style.cursor = 'grab';
+            });
           }
         }
       } catch (err) {
-        console.error('Mermaid rendering error:', err);
+        console.error('Diagram rendering error:', err);
         setError(err instanceof Error ? err.message : 'Failed to render diagram');
       } finally {
         setIsLoading(false);
@@ -131,9 +136,13 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
     };
 
     renderDiagram();
-  }, [content]);
+  }, [content, syntax]);
 
   const getDefaultContent = () => {
+    if (syntax === 'dbml') {
+      return getDefaultDbmlContent();
+    }
+    
     return `erDiagram
     CUSTOMER {
         string name

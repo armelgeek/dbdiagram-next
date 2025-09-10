@@ -22,14 +22,14 @@ export const createDiagramSchema = z.object({
   name: z.string().min(1, 'Diagram name is required').max(100, 'Diagram name must be less than 100 characters'),
   description: z.string().optional(),
   content: z.string().default(''),
-  syntax: z.string().default('mermaid'),
+  syntax: z.enum(['mermaid', 'dbml']).default('dbml'),
 });
 
 export const updateDiagramSchema = z.object({
   name: z.string().min(1, 'Diagram name is required').max(100, 'Diagram name must be less than 100 characters').optional(),
   description: z.string().optional(),
   content: z.string().optional(),
-  syntax: z.string().optional(),
+  syntax: z.enum(['mermaid', 'dbml']).optional(),
   settings: z.record(z.any()).optional(),
 });
 
