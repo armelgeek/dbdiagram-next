@@ -200,7 +200,7 @@ export class ProjectService {
       .delete(projects)
       .where(eq(projects.id, projectId));
     
-    return result.rowCount > 0;
+    return result.length > 0;
   }
 
   // Member management
@@ -227,7 +227,7 @@ export class ProjectService {
         eq(projectMembers.userId, userId)
       ));
     
-    return result.rowCount > 0;
+    return result.length > 0;
   }
 
   async updateMemberRole(projectId: string, userId: string, role: ProjectRole): Promise<ProjectMember | null> {
@@ -340,7 +340,7 @@ export class ProjectService {
       .delete(diagrams)
       .where(eq(diagrams.id, diagramId));
     
-    return result.rowCount > 0;
+    return result.length > 0;
   }
 
   // Notes management
@@ -401,7 +401,7 @@ export class ProjectService {
       .delete(notes)
       .where(eq(notes.id, noteId));
     
-    return result.rowCount > 0;
+    return result.length > 0;
   }
 
   // Chat management

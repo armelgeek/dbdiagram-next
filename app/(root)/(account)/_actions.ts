@@ -18,7 +18,7 @@ export async function updateName(data: FormData) {
 export async function updateAvatar(path: string) {
   const h = await headers();
   try {
-    await auth.api.updateUser({ header: h, body: { image: path } });
+    await auth.api.updateUser({ headers: h, body: { image: path } });
     revalidatePath("/", "layout");
   } catch {
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,15 +72,6 @@ function ProjectPageContent() {
     },
   });
 
-  // Load the first diagram by default
-  useEffect(() => {
-    if (project?.diagrams.length && !selectedDiagramId) {
-      const firstDiagram = project.diagrams[0];
-      setSelectedDiagramId(firstDiagram.id);
-      setDiagramContent(firstDiagram.content);
-    }
-  }, [project?.diagrams, selectedDiagramId]);
-
   // Update content when diagram changes
   useEffect(() => {
     if (selectedDiagram) {
@@ -151,36 +142,51 @@ function ProjectPageContent() {
     }
   };
 
-  const getDefaultDiagramContent = () => {
+  const getDefaultDiagramContent = useCallback(() => {
     const syntax = selectedDiagram?.syntax || 'dbml';
     if (syntax === 'dbml') {
-      return `Table follows {
-  following_user_id integer
-  followed_user_id integer
-  created_at timestamp
-}
-
-Table users {
+      return `Table users {
   id integer [primary key]
-  username varchar
-  role varchar
-  created_at timestamp
+  username varchar [unique, not null]
+  email varchar [unique, not null]
+  role varchar [default: 'user']
+  created_at timestamp [default: \`now()\`]
 }
 
 Table posts {
   id integer [primary key]
-  title varchar
+  title varchar [not null]
   body text [note: 'Content of the post']
-  user_id integer [not null]
-  status varchar
-  created_at timestamp
+  user_id integer [ref: > users.id]
+  status varchar [default: 'draft']
+  created_at timestamp [default: \`now()\`]
+  updated_at timestamp
 }
 
-Ref user_posts: posts.user_id > users.id // many-to-one
+Table follows {
+  following_user_id integer [ref: > users.id]
+  followed_user_id integer [ref: > users.id]
+  created_at timestamp [default: \`now()\`]
+  
+  indexes {
+    (following_user_id, followed_user_id) [unique]
+  }
+}
 
-Ref: users.id < follows.following_user_id
+Table comments {
+  id integer [primary key]
+  post_id integer [ref: > posts.id]
+  user_id integer [ref: > users.id]
+  content text [not null]
+  created_at timestamp [default: \`now()\`]
+}
 
-Ref: users.id < follows.followed_user_id`;
+// Define relationships
+Ref: posts.user_id > users.id // many-to-one
+Ref: follows.following_user_id > users.id // many-to-one  
+Ref: follows.followed_user_id > users.id // many-to-one
+Ref: comments.post_id > posts.id // many-to-one
+Ref: comments.user_id > users.id // many-to-one`;
     }
     
     return `erDiagram
@@ -208,7 +214,19 @@ Ref: users.id < follows.followed_user_id`;
         int quantity
         decimal price
     }`;
-  };
+  }, [selectedDiagram?.syntax]);
+
+  // Load the first diagram by default or set default content
+  useEffect(() => {
+    if (project?.diagrams.length && !selectedDiagramId) {
+      const firstDiagram = project.diagrams[0];
+      setSelectedDiagramId(firstDiagram.id);
+      setDiagramContent(firstDiagram.content);
+    } else if (project && project.diagrams.length === 0 && !diagramContent) {
+      // Set default content when no diagrams exist
+      setDiagramContent(getDefaultDiagramContent());
+    }
+  }, [project?.diagrams, selectedDiagramId, project, diagramContent, getDefaultDiagramContent]);
 
   if (isLoading) {
     return (

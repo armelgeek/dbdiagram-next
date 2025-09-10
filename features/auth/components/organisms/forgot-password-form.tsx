@@ -55,7 +55,7 @@ export function ForgotPasswordForm({
         <CardContent>
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit(handleSubmit)}
+              onSubmit={handleSubmit}
               className="space-y-6"
             >
               {["email"].map((field) => (

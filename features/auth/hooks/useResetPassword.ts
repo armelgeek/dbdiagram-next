@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from '@/auth-client';
-import { ResetPasswordPayload } from '@/core/domain/types/reset-password.type';
+import { ResetPasswordPayload } from '../config/reset-password.type';
 import { toast } from 'sonner';
 const useResetPassword = (token: string | null) => {
   const [pending, setPending] = useState<boolean>(false);

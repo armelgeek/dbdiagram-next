@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect } from 'react';
-import { FieldValues, useController, UseControllerProps } from 'react-hook-form';
+import { FieldValues, useController, UseControllerProps, Path, PathValue } from 'react-hook-form';
 import { UploadButton } from '@uploadthing/react';
 import { X } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -34,7 +34,7 @@ export function ControlledMultipleUpload<T extends FieldValues = FieldValues>({
   const { field, fieldState } = useController<T>({
     control,
     name,
-    defaultValue: defaultValue || [],
+    defaultValue: (defaultValue || []) as PathValue<T, Path<T>>,
   });
 
   const ensureValidArray = () => {

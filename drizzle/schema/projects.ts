@@ -127,8 +127,7 @@ export const chatMessages = pgTable('chat_messages', {
   message: text('message').notNull(),
   messageType: text('message_type').notNull().default('text'), // text, mention, system
   mentions: jsonb('mentions').default([]), // Array of mentioned user IDs
-  replyTo: text('reply_to')
-    .references(() => chatMessages.id), // For threaded conversations
+  replyTo: text('reply_to'), // For threaded conversations - will be linked after table is defined
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

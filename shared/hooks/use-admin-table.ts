@@ -9,7 +9,14 @@ import {
   banUserSchema,
   tableStateSchema,
 } from '@/features/auth/config/user.schema';
-import { CreateUserInput,UpdateUserInput,DeleteUserInput,BanUserInput, TableState} from '@/core/domain/types/admin/user.type';
+// import { CreateUserInput,UpdateUserInput,DeleteUserInput,BanUserInput, TableState} from '@/core/domain/types/admin/user.type';
+
+// TODO: Create proper user types or import from correct location
+type CreateUserInput = any;
+type UpdateUserInput = any; 
+type DeleteUserInput = any;
+type BanUserInput = any;
+type TableState = any;
 
 interface UseAdminTableProps {
   onCreateUser: (data: CreateUserInput) => Promise<void>;

@@ -61,7 +61,7 @@ function ResetPasswordFormNoSuspense({ className, ...props }: React.ComponentPro
         <CardContent>
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit(handleSubmit)}
+              onSubmit={handleSubmit}
               className="space-y-6"
             >
               {["password", "confirmPassword"].map((field) => (
@@ -83,6 +83,7 @@ function ResetPasswordFormNoSuspense({ className, ...props }: React.ComponentPro
                           }
                           placeholder={`Enter your ${field}`}
                           {...fieldProps}
+                          name={String(fieldProps.name)}
                           autoComplete={"off"}
                         />
                       </FormControl>

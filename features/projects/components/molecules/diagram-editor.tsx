@@ -2,7 +2,6 @@
 
 import { useRef, useEffect } from 'react';
 import { Editor } from '@monaco-editor/react';
-import type { editor } from 'monaco-editor';
 
 interface DiagramEditorProps {
   value: string;
@@ -21,12 +20,12 @@ export const DiagramEditor: React.FC<DiagramEditorProps> = ({
   language,
   syntax = 'mermaid',
 }) => {
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const editorRef = useRef<any>(null);
 
   // Determine the appropriate language based on syntax
   const editorLanguage = language || (syntax === 'dbml' ? 'sql' : 'yaml');
 
-  const handleEditorDidMount = (editorInstance: editor.IStandaloneCodeEditor) => {
+  const handleEditorDidMount = (editorInstance: any) => {
     editorRef.current = editorInstance;
 
     // Configure Mermaid-like syntax highlighting
@@ -43,7 +42,7 @@ export const DiagramEditor: React.FC<DiagramEditorProps> = ({
 
     // Listen for cursor position changes
     if (onCursorChange) {
-      editorInstance.onDidChangeCursorPosition((e) => {
+      editorInstance.onDidChangeCursorPosition((e: any) => {
         onCursorChange(e.position.lineNumber, e.position.column);
       });
     }
@@ -57,11 +56,11 @@ export const DiagramEditor: React.FC<DiagramEditorProps> = ({
 
   useEffect(() => {
     // Define custom languages for diagram syntax
-    if (typeof window !== 'undefined' && window.monaco) {
+    if (typeof window !== 'undefined' && (window as any).monaco) {
       // Register Mermaid language
-      window.monaco.languages.register({ id: 'mermaid' });
+      (window as any).monaco.languages.register({ id: 'mermaid' });
       
-      window.monaco.languages.setMonarchTokensProvider('mermaid', {
+      (window as any).monaco.languages.setMonarchTokensProvider('mermaid', {
         tokenizer: {
           root: [
             [/^(erDiagram|classDiagram|sequenceDiagram|flowchart|graph)/, 'keyword'],
@@ -79,18 +78,20 @@ export const DiagramEditor: React.FC<DiagramEditorProps> = ({
       });
 
       // Register DBML language
-      window.monaco.languages.register({ id: 'dbml' });
+      (window as any).monaco.languages.register({ id: 'dbml' });
       
-      window.monaco.languages.setMonarchTokensProvider('dbml', {
+      (window as any).monaco.languages.setMonarchTokensProvider('dbml', {
         tokenizer: {
           root: [
-            [/^(Table|Ref|Enum|TableGroup|Project)/, 'keyword'],
-            [/\b(primary key|not null|null|unique|increment|default)\b/, 'type'],
-            [/\b(varchar|text|integer|int|bigint|smallint|decimal|float|double|boolean|timestamp|date|time|json|uuid)\b/, 'type.identifier'],
+            [/^(Table|Ref|Enum|TableGroup|Project)\b/, 'keyword'],
+            [/\b(primary key|not null|null|unique|increment|default|note)\b/, 'type'],
+            [/\b(varchar|text|integer|int|bigint|smallint|decimal|float|double|boolean|timestamp|date|time|json|uuid|blob)\b/, 'type.identifier'],
             [/\b(many-to-one|one-to-many|one-to-one|many-to-many)\b/, 'relationship'],
+            [/\b(indexes|settings)\b/, 'keyword.control'],
             [/[><\-]+/, 'relationship'],
-            [/".*?"/, 'string'],
-            [/'.*?'/, 'string'],
+            [/"([^"\\]|\\.)*"/, 'string'],
+            [/'([^'\\]|\\.)*'/, 'string'],
+            [/`([^`\\]|\\.)*`/, 'string'],
             [/\/\/.*$/, 'comment'],
             [/\/\*[\s\S]*?\*\//, 'comment'],
             [/\{/, 'delimiter.curly'],
@@ -101,12 +102,15 @@ export const DiagramEditor: React.FC<DiagramEditorProps> = ({
             [/\)/, 'delimiter.parenthesis'],
             [/:/, 'delimiter.colon'],
             [/;/, 'delimiter.semicolon'],
+            [/,/, 'delimiter.comma'],
+            [/\d+/, 'number'],
+            [/[a-zA-Z_]\w*/, 'identifier'],
           ],
         },
       });
 
       // Define themes
-      window.monaco.editor.defineTheme('mermaid-theme', {
+      (window as any).monaco.editor.defineTheme('mermaid-theme', {
         base: 'vs',
         inherit: true,
         rules: [
@@ -118,7 +122,7 @@ export const DiagramEditor: React.FC<DiagramEditorProps> = ({
         colors: {},
       });
 
-      window.monaco.editor.defineTheme('dbml-theme', {
+      (window as any).monaco.editor.defineTheme('dbml-theme', {
         base: 'vs',
         inherit: true,
         rules: [
