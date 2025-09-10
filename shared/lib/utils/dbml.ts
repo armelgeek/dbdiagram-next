@@ -30,8 +30,8 @@ export class DbmlRenderer {
     const { fontSize = 12, fontFamily = 'Arial, sans-serif' } = options;
     
     // Extract tables from the database
-    const tables = [];
-    const refs = [];
+    const tables: any[] = [];
+    const refs: any[] = [];
     
     if (database.schemas && database.schemas.length > 0) {
       const schema = database.schemas[0];
@@ -57,7 +57,7 @@ export class DbmlRenderer {
     const tablesPerRow = Math.max(1, Math.ceil(Math.sqrt(tables.length)));
     const svgWidth = (tableWidth + tableSpacing) * tablesPerRow + padding * 2;
     
-    let svgElements = [];
+    const svgElements: string[] = [];
     let currentY = padding;
     let currentX = padding;
     let tablesInCurrentRow = 0;
@@ -83,7 +83,7 @@ export class DbmlRenderer {
 
       // Table fields
       if (table.fields) {
-        table.fields.forEach((field, fieldIndex) => {
+        table.fields.forEach((field: any, fieldIndex: number) => {
           const fieldY = currentY + headerHeight + fieldIndex * fieldHeight;
           const isPrimaryKey = field.pk;
           const isNotNull = field.not_null;
