@@ -83,13 +83,15 @@ export const DiagramEditor: React.FC<DiagramEditorProps> = ({
       (window as any).monaco.languages.setMonarchTokensProvider('dbml', {
         tokenizer: {
           root: [
-            [/^(Table|Ref|Enum|TableGroup|Project)/, 'keyword'],
-            [/\b(primary key|not null|null|unique|increment|default)\b/, 'type'],
-            [/\b(varchar|text|integer|int|bigint|smallint|decimal|float|double|boolean|timestamp|date|time|json|uuid)\b/, 'type.identifier'],
+            [/^(Table|Ref|Enum|TableGroup|Project)\b/, 'keyword'],
+            [/\b(primary key|not null|null|unique|increment|default|note)\b/, 'type'],
+            [/\b(varchar|text|integer|int|bigint|smallint|decimal|float|double|boolean|timestamp|date|time|json|uuid|blob)\b/, 'type.identifier'],
             [/\b(many-to-one|one-to-many|one-to-one|many-to-many)\b/, 'relationship'],
+            [/\b(indexes|settings)\b/, 'keyword.control'],
             [/[><\-]+/, 'relationship'],
-            [/".*?"/, 'string'],
-            [/'.*?'/, 'string'],
+            [/"([^"\\]|\\.)*"/, 'string'],
+            [/'([^'\\]|\\.)*'/, 'string'],
+            [/`([^`\\]|\\.)*`/, 'string'],
             [/\/\/.*$/, 'comment'],
             [/\/\*[\s\S]*?\*\//, 'comment'],
             [/\{/, 'delimiter.curly'],
@@ -100,6 +102,9 @@ export const DiagramEditor: React.FC<DiagramEditorProps> = ({
             [/\)/, 'delimiter.parenthesis'],
             [/:/, 'delimiter.colon'],
             [/;/, 'delimiter.semicolon'],
+            [/,/, 'delimiter.comma'],
+            [/\d+/, 'number'],
+            [/[a-zA-Z_]\w*/, 'identifier'],
           ],
         },
       });

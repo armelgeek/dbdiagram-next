@@ -80,6 +80,7 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
           if (svgElement) {
             svgElement.style.maxWidth = '100%';
             svgElement.style.height = 'auto';
+            svgElement.style.userSelect = 'none';
             
             // Add zoom and pan functionality
             let scale = 1;
@@ -103,12 +104,11 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
               applyTransform();
             });
             
-            // Pan functionality
+            // Pan functionality - only when not clicking on tables
             svgElement.addEventListener('mousedown', (e) => {
-              // Don't pan if clicking on a table (for future drag functionality)
               const target = e.target as Element;
               if (target.closest('.table-group')) {
-                return;
+                return; // Let table drag handle this
               }
               
               isPanning = true;
@@ -125,67 +125,79 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
               applyTransform();
             });
             
-            svgElement.addEventListener('mouseup', () => {
-              isPanning = false;
-              svgElement.style.cursor = 'default';
-            });
-            
-            svgElement.addEventListener('mouseleave', () => {
-              isPanning = false;
-              svgElement.style.cursor = 'default';
+            document.addEventListener('mouseup', () => {
+              if (isPanning) {
+                isPanning = false;
+                svgElement.style.cursor = 'default';
+              }
             });
 
-            // Table dragging functionality
+            // Enhanced table dragging functionality
             const tableGroups = svgElement.querySelectorAll('.table-group');
             tableGroups.forEach((tableGroup) => {
               let isDragging = false;
               let dragStartX = 0;
               let dragStartY = 0;
-              let tableStartX = 0;
-              let tableStartY = 0;
+              let initialTransform = { x: 0, y: 0 };
+              
+              // Parse initial transform
+              const transform = (tableGroup as SVGElement).getAttribute('transform') || 'translate(0,0)';
+              const match = transform.match(/translate\(([^,]+),([^)]+)\)/);
+              if (match) {
+                initialTransform.x = parseFloat(match[1]);
+                initialTransform.y = parseFloat(match[2]);
+              }
               
               tableGroup.addEventListener('mousedown', (e) => {
                 e.stopPropagation(); // Prevent canvas panning
+                e.preventDefault();
+                
                 isDragging = true;
-                
-                const rect = svgElement.getBoundingClientRect();
-                dragStartX = (e as MouseEvent).clientX - rect.left;
-                dragStartY = (e as MouseEvent).clientY - rect.top;
-                
-                // Get current transform
-                const transform = (tableGroup as SVGElement).getAttribute('transform') || 'translate(0,0)';
-                const match = transform.match(/translate\(([^,]+),([^)]+)\)/);
-                tableStartX = match ? parseFloat(match[1]) : 0;
-                tableStartY = match ? parseFloat(match[2]) : 0;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
                 
                 (tableGroup as any).style.cursor = 'grabbing';
+                svgElement.style.cursor = 'grabbing';
               });
               
-              svgElement.addEventListener('mousemove', (e) => {
-                if (!isDragging || tableGroup !== (e.target as Element)?.closest('.table-group')) return;
+              document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
                 
-                const rect = svgElement.getBoundingClientRect();
-                const currentX = (e as MouseEvent).clientX - rect.left;
-                const currentY = (e as MouseEvent).clientY - rect.top;
+                const deltaX = (e.clientX - dragStartX) / scale;
+                const deltaY = (e.clientY - dragStartY) / scale;
                 
-                const deltaX = (currentX - dragStartX) / scale;
-                const deltaY = (currentY - dragStartY) / scale;
-                
-                const newX = tableStartX + deltaX;
-                const newY = tableStartY + deltaY;
+                const newX = initialTransform.x + deltaX;
+                const newY = initialTransform.y + deltaY;
                 
                 (tableGroup as SVGElement).setAttribute('transform', `translate(${newX}, ${newY})`);
               });
               
-              svgElement.addEventListener('mouseup', () => {
+              document.addEventListener('mouseup', () => {
                 if (isDragging) {
                   isDragging = false;
+                  
+                  // Update initial transform for next drag
+                  const currentTransform = (tableGroup as SVGElement).getAttribute('transform') || 'translate(0,0)';
+                  const currentMatch = currentTransform.match(/translate\(([^,]+),([^)]+)\)/);
+                  if (currentMatch) {
+                    initialTransform.x = parseFloat(currentMatch[1]);
+                    initialTransform.y = parseFloat(currentMatch[2]);
+                  }
+                  
                   (tableGroup as any).style.cursor = 'move';
+                  svgElement.style.cursor = 'default';
                 }
               });
               
               // Set initial cursor
               (tableGroup as any).style.cursor = 'move';
+              
+              // Add hover effects
+              tableGroup.addEventListener('mouseenter', () => {
+                if (!isDragging) {
+                  (tableGroup as any).style.cursor = 'move';
+                }
+              });
             });
           }
         }
