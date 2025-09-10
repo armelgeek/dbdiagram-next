@@ -7,7 +7,7 @@ const projectService = new ProjectService();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -18,7 +18,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const diagram = await projectService.getDiagram(params.id);
+
+    const { id } = await params;
+    const diagram = await projectService.getDiagram(id);
     if (!diagram) {
       return NextResponse.json({ error: 'Diagram not found' }, { status: 404 });
     }
@@ -41,7 +43,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -52,7 +54,9 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const diagram = await projectService.getDiagram(params.id);
+
+    const { id } = await params;
+    const diagram = await projectService.getDiagram(id);
     if (!diagram) {
       return NextResponse.json({ error: 'Diagram not found' }, { status: 404 });
     }
@@ -66,7 +70,8 @@ export async function PUT(
     const body = await request.json();
     const validatedData = updateDiagramSchema.parse(body);
 
-    const updatedDiagram = await projectService.updateDiagram(params.id, {
+
+    const updatedDiagram = await projectService.updateDiagram(id, {
       ...validatedData,
       lastModifiedBy: session.user.id,
     });
@@ -81,7 +86,7 @@ export async function PUT(
       userId: session.user.id,
       action: 'update',
       entityType: 'diagram',
-      entityId: params.id,
+      entityId: id,
       metadata: validatedData,
     });
 
@@ -97,7 +102,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -108,7 +113,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const diagram = await projectService.getDiagram(params.id);
+
+    const { id } = await params;
+    const diagram = await projectService.getDiagram(id);
     if (!diagram) {
       return NextResponse.json({ error: 'Diagram not found' }, { status: 404 });
     }
@@ -119,7 +126,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const success = await projectService.deleteDiagram(params.id);
+
+    const success = await projectService.deleteDiagram(id);
     if (!success) {
       return NextResponse.json({ error: 'Failed to delete diagram' }, { status: 500 });
     }
@@ -130,7 +138,7 @@ export async function DELETE(
       userId: session.user.id,
       action: 'delete',
       entityType: 'diagram',
-      entityId: params.id,
+      entityId: id,
       metadata: { name: diagram.name },
     });
 
