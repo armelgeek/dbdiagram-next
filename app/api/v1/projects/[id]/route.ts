@@ -7,7 +7,7 @@ const projectService = new ProjectService();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -20,7 +20,7 @@ export async function GET(
 
 
     // Await params and destructure id
-    const { id } = await params;
+    const params = await context.params; const { id } = params;
     // Check if user has access to project
     const hasAccess = await projectService.hasReadAccess(id, session.user.id);
     if (!hasAccess) {
@@ -44,7 +44,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -57,7 +57,7 @@ export async function PUT(
 
 
     // Await params and destructure id
-    const { id } = await params;
+    const params = await context.params; const { id } = params;
     // Check if user has write access
     const hasAccess = await projectService.hasWriteAccess(id, session.user.id);
     if (!hasAccess) {
@@ -94,7 +94,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -107,7 +107,7 @@ export async function DELETE(
 
 
     // Await params and destructure id
-    const { id } = await params;
+    const params = await context.params; const { id } = params;
     // Check if user is owner
     const role = await projectService.checkUserPermission(id, session.user.id);
     if (role !== 'owner') {

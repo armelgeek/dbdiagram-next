@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import React from 'react';
 const NewsLetter = () => {
-  const onSubmitHandler = (e) => {
+  const onSubmitHandler = (e: React.FormEvent) => {
     e.preventDefault();
     alert('Subscribed successfully!');
   };

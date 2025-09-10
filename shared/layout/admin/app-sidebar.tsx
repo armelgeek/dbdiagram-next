@@ -159,19 +159,19 @@ export default function AppSidebar({ session }: { session: Session }) {
                 >
                   <Avatar className='rounded-lg w-8 h-8'>
                     <AvatarImage
-                      src={session?.user?.image || ''}
-                      alt={session?.user?.name || ''}
+                      src={(session as any)?.user?.image || ''}
+                      alt={(session as any)?.user?.name || ''}
                     />
                     <AvatarFallback className='rounded-lg'>
-                      {session?.user?.name?.slice(0, 2)?.toUpperCase() || 'CN'}
+                      {(session as any)?.user?.name?.slice(0, 2)?.toUpperCase() || 'CN'}
                     </AvatarFallback>
                   </Avatar>
                   <div className='flex-1 grid text-sm text-left leading-tight'>
                     <span className='font-semibold truncate'>
-                      {session?.user?.name || ''}
+                      {(session as any)?.user?.name || ''}
                     </span>
                     <span className='text-xs truncate'>
-                      {session?.user?.email || ''}
+                      {(session as any)?.user?.email || ''}
                     </span>
                   </div>
                   <ChevronsUpDown className='ml-auto size-4' />
@@ -187,22 +187,22 @@ export default function AppSidebar({ session }: { session: Session }) {
                   <div className='flex items-center gap-2 px-1 py-1.5 text-sm text-left'>
                     <Avatar className='rounded-lg w-8 h-8'>
                       <AvatarImage
-                        src={session?.user?.image || ''}
-                        alt={session?.user?.name || ''}
+                        src={(session as any)?.user?.image || ''}
+                        alt={(session as any)?.user?.name || ''}
                         className='rounded-full'
                       />
                       <AvatarFallback className='rounded-lg'>
-                        {session?.user?.name?.slice(0, 2)?.toUpperCase() ||
+                        {(session as any)?.user?.name?.slice(0, 2)?.toUpperCase() ||
                           'CN'}
                       </AvatarFallback>
                     </Avatar>
                     <div className='flex-1 grid text-sm text-left leading-tight'>
                       <span className='font-semibold truncate'>
-                        {session?.user?.name || ''}
+                        {(session as any)?.user?.name || ''}
                       </span>
                       <span className='text-xs truncate'>
                         {' '}
-                        {session?.user?.email || ''}
+                        {(session as any)?.user?.email || ''}
                       </span>
                     </div>
                   </div>

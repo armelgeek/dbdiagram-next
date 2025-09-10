@@ -21,7 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { DataTableToolbar } from '../../../../features/products/components/organisms/crud/data-table-toolbar';
+// import { DataTableToolbar } from '../../../../features/products/components/organisms/crud/data-table-toolbar';
 import { useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -133,7 +133,7 @@ export function DataTable<TData, TValue>({
   return (
     <div className="space-y-4">
       <div className="flex md:flex-row flex-col justify-between items-center gap-4">
-        {search != null ? <DataTableToolbar table={table} /> : (<div></div>)}
+        {search != null ? <div>{/* DataTableToolbar removed */}</div> : (<div></div>)}
         <div className="flex justify-center items-center gap-2">
           {onDateRangeChange && (
             <>

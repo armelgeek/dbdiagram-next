@@ -6,7 +6,13 @@ import { Search } from 'lucide-react';
 import { DataTableFacetedFilter } from '@/shared/components/molecules/datatable/data-table-faceted-filter';
 import { DataTableViewOptions } from '@/shared/components/molecules/datatable/data-table-view-options';
 import { DebouncedInput } from '@/components/ui/debounced-input';
-import { statuses } from '@/features/brand/config/brand.constant';
+// import { statuses } from '@/features/brand/config/brand.constant';
+
+// TODO: Create brand constants or remove this dependency
+const statuses = [
+  { value: 'active', label: 'Active' },
+  { value: 'inactive', label: 'Inactive' }
+];
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;

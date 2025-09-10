@@ -7,9 +7,10 @@ const projectService = new ProjectService();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const session = await auth.api.getSession({
       headers: request.headers,
     });
@@ -19,7 +20,7 @@ export async function GET(
     }
 
 
-    const { id } = await params;
+    const { id } = params;
     const diagram = await projectService.getDiagram(id);
     if (!diagram) {
       return NextResponse.json({ error: 'Diagram not found' }, { status: 404 });
@@ -43,9 +44,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const session = await auth.api.getSession({
       headers: request.headers,
     });
@@ -55,7 +57,7 @@ export async function PUT(
     }
 
 
-    const { id } = await params;
+    const { id } = params;
     const diagram = await projectService.getDiagram(id);
     if (!diagram) {
       return NextResponse.json({ error: 'Diagram not found' }, { status: 404 });
@@ -102,9 +104,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const session = await auth.api.getSession({
       headers: request.headers,
     });
@@ -114,7 +117,7 @@ export async function DELETE(
     }
 
 
-    const { id } = await params;
+    const { id } = params;
     const diagram = await projectService.getDiagram(id);
     if (!diagram) {
       return NextResponse.json({ error: 'Diagram not found' }, { status: 404 });

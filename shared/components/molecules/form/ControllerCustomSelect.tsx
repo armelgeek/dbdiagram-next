@@ -1,5 +1,5 @@
 import React from 'react';
-import { FieldValues, useController, UseControllerProps } from 'react-hook-form';
+import { FieldValues, useController, UseControllerProps, Path, PathValue } from 'react-hook-form';
 
 import {
   FormControl,
@@ -24,7 +24,7 @@ export function ControllerCustomSelect<T extends FieldValues>({
   description,
   options,
   className,
-  defaultValue = [],
+  defaultValue = [] as PathValue<T, Path<T>>,
 }: ControllerCustomSelectProps<T>) {
   const {
     field,
@@ -36,7 +36,7 @@ export function ControllerCustomSelect<T extends FieldValues>({
   });
 
   const toggleOption = (option: string) => {
-    const currentOptions = Array.isArray(field.value) ? field.value : [];
+    const currentOptions = Array.isArray(field.value) ? (field.value as string[]) : [];
     const newOptions = currentOptions.includes(option)
       ? currentOptions.filter((o: string) => o !== option)
       : [...currentOptions, option];

@@ -93,6 +93,7 @@ export function EditableProfilePhotoForm({
       {/* Upload Button */}
       {!disabled && !isLoading && (
         <div className="flex gap-2">
+          {/* TODO: Fix UploadButton component
           <UploadButton<OurFileRouter, 'imageUploader'>
             endpoint={'imageUploader'}
             onUploadBegin={() => {
@@ -109,7 +110,6 @@ export function EditableProfilePhotoForm({
             }}
             className="ut-button:bg-primary ut-button:hover:bg-primary/90 ut-button:text-primary-foreground ut-button:rounded-md ut-button:px-4 ut-button:py-2 ut-button:text-sm ut-button:font-medium ut-button:flex ut-button:items-center ut-button:gap-2 ut-button:h-9"
           >
-            {/* Custom Upload Button Content */}
             {({ isUploading }) => (
               <>
                 <Upload className="w-4 h-4" />
@@ -117,6 +117,11 @@ export function EditableProfilePhotoForm({
               </>
             )}
           </UploadButton>
+          */}
+          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-md px-4 py-2 text-sm font-medium flex items-center gap-2 h-9">
+            <Upload className="w-4 h-4" />
+            Upload photo (disabled)
+          </button>
         </div>
       )}
     </form>

@@ -51,8 +51,8 @@ export function useAdvancedTable<T>({ queryKey, queryFn }: UseTableStateProps<T>
   const [sortBy, setSortBy] = useQueryState('sortBy', { defaultValue: '' });
   const [sortDir, setSortDir] = useQueryState('sortDir', { defaultValue: '' });
   const [status, setStatus] = useQueryState('status', parseAsArrayOf(parseAsString));
-  const [startDate, setStartDate] = useQueryState('startDate', parseAsString.withDefault(null));
-  const [endDate, setEndDate] = useQueryState('endDate', parseAsString.withDefault(null));
+  const [startDate, setStartDate] = useQueryState('startDate', parseAsString.withDefault(''));
+  const [endDate, setEndDate] = useQueryState('endDate', parseAsString.withDefault(''));
 
   const queryParams = {
     ...(search ? { search } : {}),
@@ -65,7 +65,7 @@ export function useAdvancedTable<T>({ queryKey, queryFn }: UseTableStateProps<T>
     ...(endDate ? { endDate } : {})
   };
 
-  const queryP = [...queryKey, queryParams];
+  const queryP = Array.isArray(queryKey) ? [...queryKey, queryParams] : [queryKey, queryParams];
   const { data, isPending, isError } = useQuery({
     queryKey: queryP,
     queryFn: () => queryFn(queryParams),
