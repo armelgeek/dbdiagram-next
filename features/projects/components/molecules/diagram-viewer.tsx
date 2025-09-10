@@ -152,9 +152,10 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
                 e.stopPropagation(); // Prevent canvas panning
                 e.preventDefault();
                 
+                const mouseEvent = e as MouseEvent;
                 isDragging = true;
-                dragStartX = e.clientX;
-                dragStartY = e.clientY;
+                dragStartX = mouseEvent.clientX;
+                dragStartY = mouseEvent.clientY;
                 
                 (tableGroup as any).style.cursor = 'grabbing';
                 svgElement.style.cursor = 'grabbing';
@@ -163,8 +164,9 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
               document.addEventListener('mousemove', (e) => {
                 if (!isDragging) return;
                 
-                const deltaX = (e.clientX - dragStartX) / scale;
-                const deltaY = (e.clientY - dragStartY) / scale;
+                const mouseEvent = e as MouseEvent;
+                const deltaX = (mouseEvent.clientX - dragStartX) / scale;
+                const deltaY = (mouseEvent.clientY - dragStartY) / scale;
                 
                 const newX = initialTransform.x + deltaX;
                 const newY = initialTransform.y + deltaY;
