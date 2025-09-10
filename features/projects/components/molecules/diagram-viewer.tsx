@@ -3,21 +3,31 @@
 import { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
 import { DbmlRenderer, getDefaultDbmlContent } from '@/shared/lib/utils/dbml';
+import { Button } from '@/components/ui/button';
+import { ZoomIn, ZoomOut, Maximize2, Minimize2, RotateCcw, Move3D } from 'lucide-react';
 
 interface DiagramViewerProps {
   content: string;
   syntax?: string;
   className?: string;
+  isFullscreen?: boolean;
+  onFullscreenToggle?: () => void;
 }
 
 export const DiagramViewer: React.FC<DiagramViewerProps> = ({
   content,
   syntax = 'mermaid',
   className = '',
+  isFullscreen = false,
+  onFullscreenToggle,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [scale, setScale] = useState(1);
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
+  const [highlightedRelationships, setHighlightedRelationships] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!containerRef.current || !content.trim()) {
@@ -81,11 +91,9 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
             svgElement.style.maxWidth = '100%';
             svgElement.style.height = 'auto';
             svgElement.style.userSelect = 'none';
+            svgElement.style.transition = 'transform 0.2s ease';
             
             // Add zoom and pan functionality
-            let scale = 1;
-            let panX = 0;
-            let panY = 0;
             let isPanning = false;
             let startX = 0;
             let startY = 0;
@@ -95,13 +103,15 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
               svgElement.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
             };
             
+            // Initial transform
+            applyTransform();
+            
             // Zoom functionality
             svgElement.addEventListener('wheel', (e) => {
               e.preventDefault();
               const delta = e.deltaY > 0 ? 0.9 : 1.1;
-              scale *= delta;
-              scale = Math.max(0.1, Math.min(5, scale));
-              applyTransform();
+              const newScale = Math.max(0.1, Math.min(5, scale * delta));
+              setScale(newScale);
             });
             
             // Pan functionality - only when not clicking on tables
@@ -120,9 +130,10 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
             svgElement.addEventListener('mousemove', (e) => {
               if (!isPanning) return;
               
-              panX = e.clientX - startX;
-              panY = e.clientY - startY;
-              applyTransform();
+              const newPanX = e.clientX - startX;
+              const newPanY = e.clientY - startY;
+              setPanX(newPanX);
+              setPanY(newPanY);
             });
             
             document.addEventListener('mouseup', () => {
@@ -204,6 +215,32 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
                 const pathElement = relationship.querySelector('.relationship-line') as SVGPathElement;
                 if (pathElement) {
                   pathElement.setAttribute('d', `M ${fromX} ${fromY} C ${controlX1} ${fromY} ${controlX2} ${toY} ${toX} ${toY}`);
+                  
+                  // Add cardinality styling and site colors
+                  pathElement.style.stroke = 'hsl(var(--primary))'; // Use site primary color
+                  pathElement.style.strokeWidth = '2';
+                  pathElement.style.fill = 'none';
+                  
+                  // Add hover and highlight effects
+                  const relationshipId = `${fromTable}-${toTable}`;
+                  pathElement.setAttribute('data-relationship-id', relationshipId);
+                  
+                  if (highlightedRelationships.has(relationshipId)) {
+                    pathElement.style.stroke = 'hsl(var(--destructive))';
+                    pathElement.style.strokeWidth = '3';
+                  }
+                  
+                  // Add click handler for highlighting
+                  pathElement.style.cursor = 'pointer';
+                  pathElement.addEventListener('click', () => {
+                    const newHighlighted = new Set(highlightedRelationships);
+                    if (newHighlighted.has(relationshipId)) {
+                      newHighlighted.delete(relationshipId);
+                    } else {
+                      newHighlighted.add(relationshipId);
+                    }
+                    setHighlightedRelationships(newHighlighted);
+                  });
                 }
                 
                 // Update connection points
@@ -323,7 +360,66 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
     };
 
     renderDiagram();
-  }, [content, syntax]);
+  }, [content, syntax, scale, panX, panY, highlightedRelationships]);
+
+  // Control functions
+  const handleZoomIn = () => {
+    setScale(prev => Math.min(5, prev * 1.2));
+  };
+
+  const handleZoomOut = () => {
+    setScale(prev => Math.max(0.1, prev / 1.2));
+  };
+
+  const handleResetView = () => {
+    setScale(1);
+    setPanX(0);
+    setPanY(0);
+  };
+
+  const handleAutoArrange = () => {
+    // Basic auto-arrange logic - distribute tables in a grid
+    if (!containerRef.current) return;
+    
+    const svgElement = containerRef.current.querySelector('svg');
+    if (!svgElement) return;
+    
+    const tableGroups = svgElement.querySelectorAll('.table-group');
+    const tablesPerRow = Math.ceil(Math.sqrt(tableGroups.length));
+    const spacing = 200;
+    
+    tableGroups.forEach((table, index) => {
+      const row = Math.floor(index / tablesPerRow);
+      const col = index % tablesPerRow;
+      const x = col * spacing + 50;
+      const y = row * spacing + 50;
+      
+      (table as SVGElement).setAttribute('transform', `translate(${x}, ${y})`);
+    });
+    
+    // Update all relationships after rearranging
+    const updateRelationships = (svgElement as any).updateRelationships;
+    if (updateRelationships) {
+      updateRelationships();
+    }
+  };
+
+  const toggleHighlightAll = () => {
+    if (!containerRef.current) return;
+    
+    const svgElement = containerRef.current.querySelector('svg');
+    if (!svgElement) return;
+    
+    const relationships = svgElement.querySelectorAll('.relationship');
+    const allRelationshipIds = Array.from(relationships).map(rel => 
+      rel.getAttribute('data-relationship-id')).filter(Boolean);
+    
+    if (highlightedRelationships.size === allRelationshipIds.length) {
+      setHighlightedRelationships(new Set());
+    } else {
+      setHighlightedRelationships(new Set(allRelationshipIds));
+    }
+  };
 
   const getDefaultContent = () => {
     if (syntax === 'dbml') {
@@ -360,7 +456,72 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
   const displayContent = content.trim() || getDefaultContent();
 
   return (
-    <div className={`relative h-full w-full bg-white rounded-lg border ${className}`}>
+    <div className={`relative h-full w-full bg-white rounded-lg border ${className} ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
+      {/* Control Panel */}
+      <div className="absolute top-2 right-2 z-10 flex items-center space-x-1 bg-white/90 backdrop-blur-sm rounded-lg border p-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleZoomOut}
+          className="h-8 w-8 p-0"
+          title="Zoom Out"
+        >
+          <ZoomOut className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleZoomIn}
+          className="h-8 w-8 p-0"
+          title="Zoom In"
+        >
+          <ZoomIn className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleResetView}
+          className="h-8 w-8 p-0"
+          title="Reset View"
+        >
+          <RotateCcw className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleAutoArrange}
+          className="h-8 w-8 p-0"
+          title="Auto Arrange"
+        >
+          <Move3D className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={toggleHighlightAll}
+          className="h-8 w-8 p-0"
+          title="Toggle Highlight All Relationships"
+        >
+          <span className="text-xs font-bold">R</span>
+        </Button>
+        {onFullscreenToggle && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onFullscreenToggle}
+            className="h-8 w-8 p-0"
+            title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+          >
+            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </Button>
+        )}
+      </div>
+
+      {/* Zoom indicator */}
+      <div className="absolute bottom-2 right-2 z-10 bg-white/90 backdrop-blur-sm rounded px-2 py-1 text-xs font-mono">
+        {Math.round(scale * 100)}%
+      </div>
+      
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10">
           <div className="flex flex-col items-center space-y-2">
@@ -384,7 +545,7 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
       
       <div 
         ref={containerRef} 
-        className="h-full w-full overflow-auto p-4"
+        className="h-full w-full overflow-hidden p-4"
         style={{ 
           minHeight: '300px',
           display: isLoading || error ? 'none' : 'block'

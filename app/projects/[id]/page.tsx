@@ -48,6 +48,8 @@ import { useProject } from '@/features/projects/hooks/use-project';
 import { DiagramEditor } from '@/features/projects/components/molecules/diagram-editor';
 import { DiagramViewer } from '@/features/projects/components/molecules/diagram-viewer';
 import { SocketProvider } from '@/features/projects/hooks/use-socket';
+import { Chat } from '@/features/projects/components/organisms/chat';
+import { ActivityFeed } from '@/features/projects/components/organisms/activity-feed';
 import { toast } from 'sonner';
 
 function ProjectPageContent() {
@@ -59,6 +61,7 @@ function ProjectPageContent() {
   const [diagramContent, setDiagramContent] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const selectedDiagram = project?.diagrams.find(d => d.id === selectedDiagramId);
 
@@ -435,16 +438,12 @@ Ref: comments.user_id > users.id // many-to-one`;
               )}
             </TabsContent>
             
-            <TabsContent value="chat" className="p-4">
-              <div className="text-center py-8 text-gray-600">
-                Chat feature coming soon...
-              </div>
+            <TabsContent value="chat" className="p-0 h-full">
+              <Chat projectId={projectId} />
             </TabsContent>
             
-            <TabsContent value="activity" className="p-4">
-              <div className="text-center py-8 text-gray-600">
-                Activity feed coming soon...
-              </div>
+            <TabsContent value="activity" className="p-0 h-full">
+              <ActivityFeed projectId={projectId} />
             </TabsContent>
           </Tabs>
         </div>
@@ -498,6 +497,8 @@ Ref: comments.user_id > users.id // many-to-one`;
                     <DiagramViewer 
                       content={diagramContent || getDefaultDiagramContent()} 
                       syntax={selectedDiagram?.syntax || 'dbml'}
+                      isFullscreen={isFullscreen}
+                      onFullscreenToggle={() => setIsFullscreen(!isFullscreen)}
                     />
                   </div>
                 </div>
