@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import React from 'react';
-import { BadgeDollarSign, Barcode, CreditCard, Users } from 'lucide-react';
+import { BadgeDollarSign, Barcode, Users } from 'lucide-react';
 
 export default async function Overview() {
 
