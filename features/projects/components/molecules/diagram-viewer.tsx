@@ -132,6 +132,110 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
               }
             });
 
+            // Helper function to get table's current position and bounds
+            const getTableBounds = (tableGroup: Element) => {
+              const transform = (tableGroup as SVGElement).getAttribute('transform') || 'translate(0,0)';
+              const match = transform.match(/translate\(([^,]+),([^)]+)\)/);
+              const translateX = match ? parseFloat(match[1]) : 0;
+              const translateY = match ? parseFloat(match[2]) : 0;
+              
+              const rect = tableGroup.querySelector('.table-rect') as SVGRectElement;
+              if (!rect) return null;
+              
+              const x = parseFloat(rect.getAttribute('x') || '0') + translateX;
+              const y = parseFloat(rect.getAttribute('y') || '0') + translateY;
+              const width = parseFloat(rect.getAttribute('width') || '0');
+              const height = parseFloat(rect.getAttribute('height') || '0');
+              
+              return { x, y, width, height };
+            };
+
+            // Helper function to update relationship lines
+            const updateRelationships = (movedTableName?: string) => {
+              const relationships = svgElement.querySelectorAll('.relationship');
+              
+              relationships.forEach((relationship) => {
+                const fromTable = relationship.getAttribute('data-from');
+                const toTable = relationship.getAttribute('data-to');
+                
+                // Only update if this relationship involves the moved table, or update all if no specific table
+                if (movedTableName && fromTable !== movedTableName && toTable !== movedTableName) {
+                  return;
+                }
+                
+                const fromTableGroup = svgElement.querySelector(`[data-table="${fromTable}"]`);
+                const toTableGroup = svgElement.querySelector(`[data-table="${toTable}"]`);
+                
+                if (!fromTableGroup || !toTableGroup) return;
+                
+                const fromBounds = getTableBounds(fromTableGroup);
+                const toBounds = getTableBounds(toTableGroup);
+                
+                if (!fromBounds || !toBounds) return;
+                
+                // Calculate connection points
+                const fromCenterX = fromBounds.x + fromBounds.width / 2;
+                const fromCenterY = fromBounds.y + fromBounds.height / 2;
+                const toCenterX = toBounds.x + toBounds.width / 2;
+                const toCenterY = toBounds.y + toBounds.height / 2;
+                
+                let fromX, fromY, toX, toY;
+                
+                // Determine which sides to connect based on relative positions
+                if (fromCenterX < toCenterX) {
+                  // Connect right side of from table to left side of to table
+                  fromX = fromBounds.x + fromBounds.width;
+                  fromY = fromCenterY;
+                  toX = toBounds.x;
+                  toY = toCenterY;
+                } else {
+                  // Connect left side of from table to right side of to table
+                  fromX = fromBounds.x;
+                  fromY = fromCenterY;
+                  toX = toBounds.x + toBounds.width;
+                  toY = toCenterY;
+                }
+                
+                // Update the relationship path
+                const midX = (fromX + toX) / 2;
+                const controlX1 = fromX + (midX - fromX) * 0.5;
+                const controlX2 = toX - (toX - midX) * 0.5;
+                
+                const pathElement = relationship.querySelector('.relationship-line') as SVGPathElement;
+                if (pathElement) {
+                  pathElement.setAttribute('d', `M ${fromX} ${fromY} C ${controlX1} ${fromY} ${controlX2} ${toY} ${toX} ${toY}`);
+                }
+                
+                // Update connection points
+                const fromPoint = relationship.querySelector('.connection-point:first-of-type') as SVGCircleElement;
+                const toPoint = relationship.querySelector('.connection-point:last-of-type') as SVGCircleElement;
+                
+                if (fromPoint) {
+                  fromPoint.setAttribute('cx', fromX.toString());
+                  fromPoint.setAttribute('cy', fromY.toString());
+                }
+                if (toPoint) {
+                  toPoint.setAttribute('cx', toX.toString());
+                  toPoint.setAttribute('cy', toY.toString());
+                }
+                
+                // Update relationship label position
+                const labelBg = relationship.querySelector('.relationship-label-bg') as SVGRectElement;
+                const labelText = relationship.querySelector('.relationship-label') as SVGTextElement;
+                
+                if (labelBg && labelText) {
+                  const labelX = midX - 30;
+                  const labelY = (fromY + toY) / 2 - 10;
+                  const labelTextY = (fromY + toY) / 2 + 3;
+                  
+                  labelBg.setAttribute('x', labelX.toString());
+                  labelBg.setAttribute('y', labelY.toString());
+                  labelText.setAttribute('x', midX.toString());
+                  labelText.setAttribute('y', labelTextY.toString());
+                }
+              });
+            };
+
             // Enhanced table dragging functionality
             const tableGroups = svgElement.querySelectorAll('.table-group');
             tableGroups.forEach((tableGroup) => {
@@ -148,13 +252,16 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
                 initialTransform.y = parseFloat(match[2]);
               }
               
+              const tableName = tableGroup.getAttribute('data-table');
+              
               tableGroup.addEventListener('mousedown', (e) => {
                 e.stopPropagation(); // Prevent canvas panning
                 e.preventDefault();
                 
+                const mouseEvent = e as MouseEvent;
                 isDragging = true;
-                dragStartX = e.clientX;
-                dragStartY = e.clientY;
+                dragStartX = mouseEvent.clientX;
+                dragStartY = mouseEvent.clientY;
                 
                 (tableGroup as any).style.cursor = 'grabbing';
                 svgElement.style.cursor = 'grabbing';
@@ -163,13 +270,19 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
               document.addEventListener('mousemove', (e) => {
                 if (!isDragging) return;
                 
-                const deltaX = (e.clientX - dragStartX) / scale;
-                const deltaY = (e.clientY - dragStartY) / scale;
+                const mouseEvent = e as MouseEvent;
+                const deltaX = (mouseEvent.clientX - dragStartX) / scale;
+                const deltaY = (mouseEvent.clientY - dragStartY) / scale;
                 
                 const newX = initialTransform.x + deltaX;
                 const newY = initialTransform.y + deltaY;
                 
                 (tableGroup as SVGElement).setAttribute('transform', `translate(${newX}, ${newY})`);
+                
+                // Update relationships involving this table
+                if (tableName) {
+                  updateRelationships(tableName);
+                }
               });
               
               document.addEventListener('mouseup', () => {
