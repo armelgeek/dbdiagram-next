@@ -68,7 +68,7 @@ function ProjectPageContent() {
       name: '',
       description: '',
       content: '',
-      syntax: 'mermaid',
+      syntax: 'dbml',
     },
   });
 
@@ -152,6 +152,37 @@ function ProjectPageContent() {
   };
 
   const getDefaultDiagramContent = () => {
+    const syntax = selectedDiagram?.syntax || 'dbml';
+    if (syntax === 'dbml') {
+      return `Table follows {
+  following_user_id integer
+  followed_user_id integer
+  created_at timestamp
+}
+
+Table users {
+  id integer [primary key]
+  username varchar
+  role varchar
+  created_at timestamp
+}
+
+Table posts {
+  id integer [primary key]
+  title varchar
+  body text [note: 'Content of the post']
+  user_id integer [not null]
+  status varchar
+  created_at timestamp
+}
+
+Ref user_posts: posts.user_id > users.id // many-to-one
+
+Ref: users.id < follows.following_user_id
+
+Ref: users.id < follows.followed_user_id`;
+    }
+    
     return `erDiagram
     CUSTOMER {
         string name
@@ -410,7 +441,7 @@ function ProjectPageContent() {
                     <div className="flex items-center justify-between">
                       <h3 className="font-medium text-gray-900">Editor</h3>
                       <div className="flex items-center space-x-2">
-                        <Badge variant="outline">Mermaid</Badge>
+                        <Badge variant="outline">{selectedDiagram?.syntax?.toUpperCase() || 'DBML'}</Badge>
                         <Button variant="ghost" size="sm">
                           <Settings className="h-4 w-4" />
                         </Button>
@@ -422,7 +453,7 @@ function ProjectPageContent() {
                       value={diagramContent}
                       onChange={handleDiagramContentChange}
                       onCursorChange={handleCursorChange}
-                      language="yaml"
+                      syntax={selectedDiagram?.syntax || 'dbml'}
                     />
                   </div>
                 </div>
@@ -448,6 +479,7 @@ function ProjectPageContent() {
                   <div className="flex-1 p-4">
                     <DiagramViewer 
                       content={diagramContent || getDefaultDiagramContent()} 
+                      syntax={selectedDiagram?.syntax || 'dbml'}
                     />
                   </div>
                 </div>
